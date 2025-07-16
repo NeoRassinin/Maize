@@ -1,4 +1,5 @@
 # 🌽 Corn Emergence Estimation from UAV Imagery
+<div align="center"> <iframe src="https://sketchfab.com/models/e7c9a504ef3f40c28c515978654146bb/embed" frameborder="0" width="640" height="480" allowfullscreen mozallowfullscreen="true" webkitallowfullscreen="true"></iframe> </div>
 
 <p align="center">
   <img src="https://media.giphy.com/media/ZZrP0uQKFF5yA/giphy.gif" width="600"/>
