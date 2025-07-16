@@ -1,5 +1,5 @@
 import torch
-import numpy as np
+
 
 
 def make_inference(model, dataset, device, index):

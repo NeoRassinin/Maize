@@ -5,7 +5,7 @@ from PIL import Image
 import os
 from load_models import load_model
 from Classification.Inference import make_pipeline_predict
-from Classification.Config import PREDICT_PATH
+from Classification.config import PREDICT_PATH
 model = load_model()
 def Web_Interface(model):
     '''

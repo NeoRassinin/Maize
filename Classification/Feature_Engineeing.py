@@ -1,34 +1,48 @@
+from preprocessing import clear_mask,make_bool_skeleton,sort_function
+from spark_session import init_spark as spark
+import cv2
+import numpy as np
+from skimage import morphology
+from skan import Skeleton, summarize
+import os
+from pyspark.sql import Window
+from pyspark.sql.functions import row_number
+from pyspark.sql.functions import lit, desc, col, size, array_contains\
+, isnan, udf, hour, array_min, array_max, countDistinct, count, abs\
+, percentile_approx, least, greatest, min, max, sum, avg, expr
+from pyspark.sql.functions import round as rnd
+from pyspark.sql.types import *
+
+
+
 def map_skeleton_contours(contours_skeletons, contours_objects, top_left_points_skel, top_left_points_contour):
-    ''' Предположим, что у нас есть два списка контуров: contours_objects и contours_skeletons
-    Если расстояние между центрами и разница между площадями достаточно малы, то считаем, что контуры соответствуют друг другу
-    '''
+    # Предположим, что у нас есть два списка контуров: contours_objects и contours_skeletons
+    # Если расстояние между центрами и разница между площадями достаточно малы, то считаем, что контуры соответствуют друг другу
     len_i = len(top_left_points_skel)
     len_j = len(top_left_points_contour)
     matches = []
     best_points = []
     boxes_features = []
     for i in range(len_i):
-        x_skel, y_skel, w_skel, h_skel = cv2.boundingRect(contours_skeletons[i])
         best_match = None
         best_point = None
-        best_index = i
         min_dist = np.inf
-        min_area_diff = np.inf
         for j in range(len_j):
             x_cnt, y_cnt, w_cnt, h_cnt = cv2.boundingRect(contours_objects[j])
             area = cv2.contourArea(contours_objects[j])
             rect = cv2.minAreaRect(contours_objects[j])
             center, size, angle = rect
             width, height = size
-            box_ratio = np.min(np.array([width/height, height/width]))
-            area_box_ratio = area/(width*height)
+            box_ratio = np.min(np.array([width / height, height / width]))
+            area_box_ratio = area / (width * height)
+
             length = cv2.arcLength(contours_objects[j], True)
             ratio_skel_contour = cv2.arcLength(contours_skeletons[i], True) / cv2.arcLength(contours_objects[j], True)
-
             dist = np.linalg.norm(np.array(top_left_points_skel[i]) - np.array(top_left_points_contour[j]))
             if dist < min_dist:
                 min_dist = dist
-                box_features = [i, x_cnt, y_cnt, width, height, area, length, ratio_skel_contour, area_box_ratio, float(box_ratio)]
+                box_features = [i, x_cnt, y_cnt, width, height, area, length, ratio_skel_contour, area_box_ratio,
+                                float(box_ratio)]
                 best_index = j
                 best_match = [contours_skeletons[i], contours_objects[best_index]]
                 best_point = [top_left_points_skel[i], top_left_points_contour[best_index]]
@@ -36,6 +50,7 @@ def map_skeleton_contours(contours_skeletons, contours_objects, top_left_points_
         best_points.append(best_point.copy())
         boxes_features.append(box_features.copy())
     boxes_features = sorted(boxes_features, key=lambda x: x[0])
+
     # Теперь в списке matches содержатся сопоставленные контуры объектов и контуры скелетов
     contours_skeletons = [contour_skeleton[0] for contour_skeleton in matches]
     contours_objects = [contour_object[1] for contour_object in matches]
@@ -44,39 +59,39 @@ def map_skeleton_contours(contours_skeletons, contours_objects, top_left_points_
     return contours_skeletons, contours_objects, top_left_points_skel, top_left_points_contour, boxes_features
 
 
-def get_features(image_path, mask_path, method=None, predict=False):
-    '''
-    Функция для формирования геометрических признаков
-    :param image_path:
-    :param mask_path:
-    :param method:
-    :param predict:
-    :return: image, mask, skeleton, contours, boxes_features, target, top_left_points_skel, hough
-    '''
+def get_features(image_path, mask_path, method='lee', predict=False):
+    """
+    Формирует геометрические признаки по изображению и маске.
+
+    Args:
+        image_path (str): Путь к изображению.
+        mask_path (str): Путь к бинарной маске.
+        method (str, optional): Метод скелетизации. По умолчанию None.
+        predict (bool, optional): Флаг предсказания. По умолчанию False.
+
+    Returns:
+        Tuple: image, mask, skeleton, contours, boxes_features, target,
+               top_left_points_skel, hough
+    """
     image = cv2.imread(image_path)
     image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
-    target = []
-    indexes = []
-    boxes_features = []
-    kernel = np.ones((3, 3), np.uint8)
 
     mask = cv2.imread(mask_path, 0)
     mask = clear_mask(mask, min_length=70)
-    print(f"Mask shape: {mask.shape if mask is not None else 'None'}")
 
+    print(f"Mask shape: {mask.shape if mask is not None else 'None'}")
     print("Минимальное значение:", np.min(mask))
     print("Максимальное значение:", np.max(mask))
     print("Количество ненулевых пикселей:", np.count_nonzero(mask))
 
-    hough = hough_transform_with_angles(mask_path)
+    kernel = np.ones((3, 3), np.uint8)
 
     contours, _ = cv2.findContours(mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
-    skeleton = morphology.skeletonize(mask, method=method)
+    skeleton = morphology.skeletonize(mask, method='lee')
     skeleton = make_bool_skeleton(skeleton)
     contours_skel, _ = cv2.findContours(skeleton, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
 
-    print(len(contours), len(contours_skel))
-    while (len(contours) != len(contours_skel)):
+    while len(contours) != len(contours_skel):
         mask = cv2.dilate(mask, kernel, iterations=1)
         contours, _ = cv2.findContours(mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
         skeleton = morphology.skeletonize(mask, method=method)
@@ -84,61 +99,68 @@ def get_features(image_path, mask_path, method=None, predict=False):
         contours_skel, _ = cv2.findContours(skeleton, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
         print(len(contours), len(contours_skel))
 
-    top_left_points_contour = []
-    for contour in contours:
-        min_x = np.min(contour[:, 0, 0])
-        min_y = np.min(contour[:, 0, 1])
-        top_left_points_contour.append((min_x, min_y))
-    contours_points = [(point, contour) for point, contour in zip(top_left_points_contour, contours)]
-    contours_points = sorted(contours_points, key=lambda x: (x[0][1], x[0][0]))
-    contours = [contour for _, contour in contours_points]
+    top_left_points_contour = [
+        (np.min(c[:, 0, 0]), np.min(c[:, 0, 1])) for c in contours
+    ]
+    contours_points = list(zip(top_left_points_contour, contours))
+    contours_points.sort(key=lambda x: (x[0][1], x[0][0]))
+    contours = [c for _, c in contours_points]
     top_left_points_contour = sorted(top_left_points_contour, key=sort_function)
 
-    top_left_points_skel = []
-    for contour_skel in contours_skel:
-        min_x = np.min(contour_skel[:, 0, 0])
-        min_y = np.min(contour_skel[:, 0, 1])
-        top_left_points_skel.append((min_x, min_y))
-    contours_skel_points = [(point, contour) for point, contour in zip(top_left_points_skel, contours_skel)]
-    contours_skel_points = sorted(contours_skel_points, key=lambda x: (x[0][1], x[0][0]))
-    contours_skel = [contour for _, contour in contours_skel_points]
+    top_left_points_skel = [
+        (np.min(c[:, 0, 0]), np.min(c[:, 0, 1])) for c in contours_skel
+    ]
+    contours_skel_points = list(zip(top_left_points_skel, contours_skel))
+    contours_skel_points.sort(key=lambda x: (x[0][1], x[0][0]))
+    contours_skel = [c for _, c in contours_skel_points]
     top_left_points_skel = sorted(top_left_points_skel, key=sort_function)
-    contours_skel, contours, top_left_points_skel, top_left_points_contour, boxes_features = map_skeleton_contours(
-        contours_skel, contours, top_left_points_skel, top_left_points_contour)
+
+    (contours_skel, contours,
+     top_left_points_skel,
+     top_left_points_contour,
+     boxes_features) = map_skeleton_contours(
+        contours_skel,
+        contours,
+        top_left_points_skel,
+        top_left_points_contour
+    )
+
+    target = [1 for _ in range(len(top_left_points_skel))]
+
     if not predict:
-        for j in range(len(top_left_points_contour)):
+        for j, point in enumerate(top_left_points_contour):
             cv2.drawContours(image, [contours[j]], -1, (255, 0, 0), 1)
-            # cv2.putText(image, str(j), (top_left_points_contour[j][0] + 10, top_left_points_contour[j][1] + 10), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 255), 5)
-        for i in range(len(top_left_points_skel)):
-            cv2.putText(image, str(i), (top_left_points_skel[i][0] + 15, top_left_points_skel[i][1] + 15),
-                        cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 255), 3)
-    for index in range(len(top_left_points_skel)):
-        target.append(1)
 
-    # Отрисовка bounding box'ов для контуров маски
+        for i, point in enumerate(top_left_points_skel):
+            cv2.putText(
+                image,
+                str(i),
+                (point[0] + 15, point[1] + 15),
+                cv2.FONT_HERSHEY_SIMPLEX,
+                1,
+                (0, 0, 255),
+                3
+            )
+
     for contour in contours:
-        # Нахождение минимального ограничивающего прямоугольника
         rect = cv2.minAreaRect(contour)
-        center, size, angle = rect
-        width, height = size
-        area = (width * height)
-        box_ratios = np.min(np.array([width / height, height / width]))
-
-        # Получение вершин прямоугольника
         box = cv2.boxPoints(rect)
-        box = np.int0(box)  # Преобразование координат в целые числа
-
-        # Рисование прямоугольника
+        box = box.astype(int)
         cv2.drawContours(image, [box], 0, (0, 255, 0), 2)
-    # Преобразуем изображение обратно в BGR для сохранения через OpenCV
+
     image_bgrs = cv2.cvtColor(image, cv2.COLOR_RGB2BGR)
+    cv2.imwrite("output_image_with_boxes.jpg", image_bgrs)
 
-    # Сохраняем изображение
-    output_image_path = "output_image_with_boxes.jpg"
-    cv2.imwrite(output_image_path, image_bgrs)
+    return (
+        image,
+        mask,
+        skeleton,
+        contours,
+        boxes_features,
+        target,
+        top_left_points_skel
+    )
 
-
-    return image, mask, skeleton, contours, boxes_features, target, top_left_points_skel, hough
 
 
 def delete_spurs(df):
@@ -228,7 +250,7 @@ def make_stats(df, group_col, agg_col):
         avg(agg_col).alias(agg_col + "_avg"),
         min(agg_col).alias(agg_col + "_min"),
         max(agg_col).alias(agg_col + "_max"),
-        percentile(agg_col, 0.5).alias(agg_col + "_median")
+        percentile_approx(agg_col, 0.5).alias(agg_col + "_median")
     ).filter(col("branch-type") == 0)
     aggregated_df_0 = aggregated_df_0.drop('branch-type')
 
@@ -237,7 +259,7 @@ def make_stats(df, group_col, agg_col):
         avg(agg_col).alias(agg_col + "_avg_1"),
         min(agg_col).alias(agg_col + "_min_1"),
         max(agg_col).alias(agg_col + "_max_1"),
-        percentile(agg_col, 0.5).alias(agg_col + "_median_1")
+        percentile_approx(agg_col, 0.5).alias(agg_col + "_median_1")
     ).filter(col("branch-type") == 1)
     aggregated_df_1 = aggregated_df_1.drop('branch-type')
 
@@ -246,7 +268,7 @@ def make_stats(df, group_col, agg_col):
         avg(agg_col).alias(agg_col + "_avg_2"),
         min(agg_col).alias(agg_col + "_min_2"),
         max(agg_col).alias(agg_col + "_max_2"),
-        percentile(agg_col, 0.5).alias(agg_col + "_median_2")
+        percentile_approx(agg_col, 0.5).alias(agg_col + "_median_2")
     ).filter(col("branch-type") == 2)
     aggregated_df_2 = aggregated_df_2.drop('branch-type')
 
@@ -255,7 +277,7 @@ def make_stats(df, group_col, agg_col):
         avg(agg_col).alias(agg_col + "_avg"),
         min(agg_col).alias(agg_col + "_min"),
         max(agg_col).alias(agg_col + "_max"),
-        percentile(agg_col, 0.5).alias(agg_col + "_median")
+        percentile_approx(agg_col, 0.5).alias(agg_col + "_median")
     )
     aggregated_df_1_2 = aggregated_df_1_2.union(aggregated_df_0).orderBy('skeleton-id')
     aggregated_df = aggregated_df_1_2
@@ -323,7 +345,7 @@ def make_table(skeleton_img, features, target):
 
     # make branch data
     branch_df = summarize(Skeleton(skeleton_img))
-    df = spark.createDataFrame(data=branch_df)
+    spark.createDataFrame(branch_df.copy(deep=True))
 
     # selecting the required columns
     df = df.select(['skeleton-id', 'branch-type', 'branch-distance', 'euclidean-distance'])

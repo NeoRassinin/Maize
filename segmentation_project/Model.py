@@ -1,4 +1,3 @@
-import torch
 import torch.nn as nn
 import segmentation_models_pytorch as smp
 from segmentation_models_pytorch.losses import DiceLoss

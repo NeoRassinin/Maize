@@ -1,65 +1,64 @@
-def make_pipeline_predict(model, image_path, mask_path, output_path, method='None', model_name=''):
-    # Проверка существования файлов
-    if not os.path.exists(image_path):
-        raise FileNotFoundError(f"Изображение не найдено: {image_path}")
-    if not os.path.exists(mask_path):
-        raise FileNotFoundError(f"Маска не найдена: {mask_path}")
+from feature_engineeing import get_features,make_table
+from metrics import estimate_accuracy
+from io_utils import save_prediction_image
+from visualization import draw_predictions, show_image_with_title
+from validation import validate_prediction_inputs,validate_file_exists
+from data_loader import update_cols
+from config import best_features
+from inference_utils import prepare_features_for_inference, predict_model
 
-    print(f"Обрабатываю изображение: {image_path}")
-    print(f"Обрабатываю маску: {mask_path}")
+
+
+
+def make_pipeline_predict(
+    model,
+    image_path,
+    mask_path,
+    output_path,
+    method='lee',
+    model_name='rf'
+):
+    """Полный конвейер инференса: от признаков до визуализации и метрики."""
+    # Проверка существования файлов
+    validate_file_exists(image_path, "Изображение")
+    validate_file_exists(mask_path, "Маска")
 
     # Получение признаков
-    image, mask, skeleton, contours, boxes_features, target, top_left_points_skel, hough = get_features(
-        image_path, mask_path, method=method, predict=True
-    )
+    image, mask, skeleton, contours, boxes_features, target, \
+        top_left_points_skel = get_features(
+            image_path, mask_path, method=method, predict=True
+        )
 
     # Создание таблицы признаков
-    df = make_table(skeleton, boxes_features, target, hough)
+    df = make_table(skeleton, boxes_features, target)
     df = df.toPandas()
-    df['max-box-side'] = df[['width', 'height']].max(axis=1)
+    update_cols(df)
 
-    # Подготовка данных для модели
-    X = df[best_features].fillna(0)
-    model_predict = model.predict(X)
-    model_predict = np.uint8(np.round(model_predict, 0))
+    # Предсказание
+    X = prepare_features_for_inference(df, best_features)
+    model_predict = predict_model(model, X)
 
     # Извлечение ID скелетов
     ids = df['skeleton-id'].tolist()
 
     # Проверка на пустые данные
-    if len(contours) == 0:
-        raise ValueError("Контуры не найдены.")
-    if len(top_left_points_skel) == 0:
-        raise ValueError("Скелеты не найдены.")
-    if len(model_predict) == 0:
-        raise ValueError("Модель не вернула предсказаний.")
+    validate_prediction_inputs(contours, top_left_points_skel, model_predict)
 
     # Рисование результатов
-    image = cv2.imread(image_path)
-    image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
-    index_draw = 0
-    for j, contour in enumerate(contours):
-        if j in ids:  # Только если контур соответствует ID
-            x, y = top_left_points_skel[j][0], top_left_points_skel[j][1]
-            cv2.drawContours(image, [contour], -1, (255, 0, 0), 1)
-            cv2.putText(image, str(model_predict[index_draw]), (x + 10, y + 10), cv2.FONT_HERSHEY_SIMPLEX, 1,
-                        (0, 0, 255), 6)
-            index_draw += 1
-    plt.imshow(image)
-    plt.title("Изображение с таргетными метками")
-    plt.axis("off")
-    plt.show()
+    image = draw_predictions(
+        image_path, contours, ids, top_left_points_skel, model_predict
+    )
+    show_image_with_title(image)
 
     # Сохранение результата
-    os.makedirs(output_path, exist_ok=True)
-    image_name = os.path.splitext(os.path.basename(image_path))[0]
-    cv2.imwrite(os.path.join(output_path, f'{method}_{image_name}_{model_name}.jpg'), image)
+    save_prediction_image(
+        image, image_path, output_path, method, model_name
+    )
 
     # Вычисление точности
-    if len(ids) == 0 or model_predict.sum() == 0:
-        accuracy = 0
-    else:
-        accuracy = np.min([model_predict.sum() / len(ids), len(ids) / model_predict.sum()])
+    accuracy = estimate_accuracy(model_predict, ids)
 
-    print(f"{image_name}: {model_predict.sum()}")
     return accuracy
+
+
+

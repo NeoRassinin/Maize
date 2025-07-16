@@ -1,6 +1,7 @@
 import numpy as np
 from tqdm import tqdm
 from sklearn.metrics import confusion_matrix
+import torch
 
 
 def compute_metrics(model, dataloader, device):

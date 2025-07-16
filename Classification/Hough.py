@@ -1,50 +1,56 @@
-def hough_transform_with_angles(mask_path):
+import cv2
+import numpy as np
+from scipy.stats import mode
+
+
+def hough_transform_with_angles(mask_path: str) -> float | None:
     """
     Применяет преобразование Хафа к бинарной маске для обнаружения прямых линий.
-    Вычисляет средний, максимальный и минимальный углы наклона линий.
-    Визуализирует результат.
+    Вычисляет преобладающий угол наклона (в градусах) рядов кукурузы.
+
+    Args:
+        mask_path (str): Путь к бинарной маске (черно-белое изображение).
+
+    Returns:
+        float | None: Угол в градусах (если линии найдены), иначе None.
     """
-    # Загрузка бинарной маски
+    # Загрузка бинарной маски в оттенках серого
     mask = cv2.imread(mask_path, cv2.IMREAD_GRAYSCALE)
     if mask is None:
         raise FileNotFoundError(f"Не удалось загрузить маску: {mask_path}")
-    mask = (mask * 255).astype(np.uint8)
 
-    # Убедимся, что маска содержит значения [0, 255]
-    _, mask = cv2.threshold(mask, 127, 255, cv2.THRESH_BINARY)
+    # Убедимся, что маска содержит только значения 0 и 255
+    _, binary_mask = cv2.threshold(mask, 127, 255, cv2.THRESH_BINARY)
 
+    # Применяем преобразование Хафа
     lines = cv2.HoughLinesP(
-        mask,
-        rho=1,  # Разрешение по расстоянию (в пикселях)
-        theta=np.pi / 180,  # Разрешение по углу (в радианах)
-        threshold=430,  # Минимальное количество голосов для обнаружения линии
-        minLineLength=100,  # Минимальная длина линии
-        maxLineGap=60  # Максимальный разрыв между частями одной линии
+        binary_mask,
+        rho=1,
+        theta=np.pi / 180,
+        threshold=430,
+        minLineLength=100,
+        maxLineGap=60
     )
 
-    # Создаем цветное изображение для визуализации
-    color_image = cv2.cvtColor(mask, cv2.COLOR_GRAY2BGR)
-
-    # Список для хранения углов наклона
+    # Хранилище для углов наклона найденных линий
     angles = []
 
-    # Если линии найдены, рисуем их и вычисляем углы
     if lines is not None:
         for line in lines:
-            x1, y1, x2, y2 = line[0]  # Координаты начала и конца линии
-            angle = np.arctan2(y2 - y1, x2 - x1) * 180 / np.pi  # Угол наклона в градусах
+            x1, y1, x2, y2 = line[0]
+            dx = x2 - x1
+            dy = y2 - y1
+
+            if dx == 0:
+                angle = 90.0  # Вертикальная линия
+            else:
+                angle = np.degrees(np.arctan2(dy, dx))
+
             angles.append(angle)
 
-            # Рисуем линию на изображении
-            cv2.line(color_image, (x1, y1), (x2, y2), (0, 255, 0), 2)  # Зелёная линия
-
     if angles:
-        angles_rounded = np.round(angles, 2)
+        rounded_angles = np.round(angles, 2)
+        dominant_angle = mode(rounded_angles, keepdims=False).mode
+        return float(dominant_angle)
 
-        # Находим моду
-        mode_result = mode(angles_rounded, keepdims=False)
-        avg_angle = mode_result.mode
-    else:
-        avg_angle = None
-
-    return avg_angle
+    return None
