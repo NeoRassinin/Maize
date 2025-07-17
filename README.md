@@ -1,6 +1,6 @@
 ## 🌽 About The Project
 
-This project provides a **modular ML pipeline** to assess the germination potential of corn (maize) kernels. It includes image segmentation using U-Net, feature extraction (skeleton, contour, bounding boxes), and classification using various ML algorithms (Random Forest, SHAP explainability, etc).
+This project provides a **modular ML pipeline** to assess the germination potential of corn (maize) kernels. It includes image segmentation using U-Net, feature extraction (skeleton, contour, bounding boxes), and classification using various ML algorithms (Random Forest, SVR, Adaboost, LR, SHAP explainability, etc).
 
 ###  Why This Project
 
@@ -54,6 +54,8 @@ Maize/
 * [PyTorch](https://pytorch.org/)
 * [Albumentations](https://albumentations.ai/)
 * [SHAP](https://github.com/slundberg/shap)
+* [Spark](https://spark.apache.org/)
+* [Scikit-image](https://scikit-image.org/)
 
 
 ## ⚡ Getting Started
