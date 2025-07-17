@@ -1,19 +1,20 @@
-# 🌽 Corn Emergence Estimation from UAV Imagery
+## 🌽 About The Project
 
-<p align="center">
-  <img src="https://media.giphy.com/media/ZZrP0uQKFF5yA/giphy.gif" width="600"/>
-</p>
+This project provides a **modular ML pipeline** to assess the germination potential of corn (maize) kernels. It includes image segmentation using U-Net, feature extraction (skeleton, contour, bounding boxes), and classification using various ML algorithms (Random Forest, SHAP explainability, etc).
 
-Автоматическая оценка всхожести кукурузы на основе изображений с БПЛА. Проект включает два модуля:
+[https://github.com/your\_username/Maize/assets/your\_video\_id/germination-demo.mp4](https://github.com/your_username/Maize/assets/your_video_id/germination-demo.mp4)
 
-- **Сегментация растений** с использованием глубоких сверточных сетей (`UNet`, `DeepLab`)
-- **Извлечение признаков и классификация всхожести** с помощью PySpark и ML
+### 📅 Why This Project
 
----
+* Automated seedling evaluation using computer vision
+* Designed for high-throughput phenotyping tasks in agriculture
+* Flexible structure to support plug-and-play segmentation and classification models
 
-## 📂 Структура проекта
+<p align="right">(<a href="#readme-top">back to top</a>)</p>
 
-```bash
+## 🧰 Project Structure
+
+```
 Maize/
 ├── Classification/              # Модуль оценки всхожести
 │   ├── ALE_PREDICT_*            # Предсказания на полях Алейска
@@ -45,4 +46,110 @@ Maize/
 │
 ├── data_lee.csv                 # Основной CSV с аннотациями
 └── README.md                    # Этот файл
+```
+
+## 🚀 Built With
+
+* [Python](https://www.python.org/)
+* [NumPy](https://numpy.org/)
+* [Pandas](https://pandas.pydata.org/)
+* [Scikit-Learn](https://scikit-learn.org/)
+* [OpenCV](https://opencv.org/)
+* [Matplotlib](https://matplotlib.org/)
+* [PyTorch](https://pytorch.org/)
+* [Albumentations](https://albumentations.ai/)
+* [SHAP](https://github.com/slundberg/shap)
+
+<p align="right">(<a href="#readme-top">back to top</a>)</p>
+
+## ⚡ Getting Started
+
+Clone the project and install dependencies:
+
+```bash
+git clone https://github.com/your_username/Maize.git
+cd Maize
+pip install -r requirements.txt
+```
+
+Make sure `data_lee.csv` and image directories are properly structured under `Dataset/`.
+
+### Run segmentation
+
+```bash
+python segmentation_project/Inference.py
+```
+
+### Run classification pipeline
+
+```bash
+python Classification/Inference.py
+```
+
+<p align="right">(<a href="#readme-top">back to top</a>)</p>
+
+## 🔄 Pipeline Overview
+
+1. **Segmentation**: U-Net model segments seed parts
+2. **Feature Extraction**: Extracts contours, skeletons, bounding boxes, top-left points
+3. **Classification**: Predicts germination using extracted features
+4. **Visualization**: Overlays predictions and metrics on images
+
+![Pipeline GIF](https://media.giphy.com/media/QBd2kLB5qDmysEXre9/giphy.gif)
+
+<p align="right">(<a href="#readme-top">back to top</a>)</p>
+
+## 🌟 Features
+
+* [x] U-Net based image segmentation
+* [x] Custom feature engineering (skeleton, contours)
+* [x] Classification using Random Forest and SHAP
+* [x] Configurable inference/visualization modules
+
+<p align="right">(<a href="#readme-top">back to top</a>)</p>
+
+## 🌐 Roadmap
+
+* [ ] Add 3D seed visualization with Meshroom/Plotly
+* [ ] Integrate model selection via Optuna
+* [ ] Add real-time prediction UI
+
+<p align="right">(<a href="#readme-top">back to top</a>)</p>
+
+## ✊ Contributing
+
+Pull requests are welcome! Please follow these steps:
+
+1. Fork the repo
+2. Create a feature branch (`git checkout -b feature/XYZ`)
+3. Commit your changes
+4. Push to the branch and open a PR
+
+<p align="right">(<a href="#readme-top">back to top</a>)</p>
+
+## 📄 License
+
+Distributed under the MIT License. See `LICENSE` for more info.
+
+<p align="right">(<a href="#readme-top">back to top</a>)</p>
+
+## 💬 Contact
+
+Project Author: **Your Name**
+Email: [youremail@example.com](mailto:youremail@example.com)
+Repo: [github.com/your\_username/Maize](https://github.com/your_username/Maize)
+
+<p align="right">(<a href="#readme-top">back to top</a>)</p>
+
+## 👏 Acknowledgments
+
+* [PyImageSearch](https://pyimagesearch.com/)
+* [Papers With Code](https://paperswithcode.com/)
+* [Albumentations](https://albumentations.ai/)
+* [Scikit-learn Docs](https://scikit-learn.org/stable/)
+
+---
+
+> Tip: add `.gif` or `.mp4` videos showing model performance during classification or segmentation. Upload them into a `docs/` or `images/` folder and link from there.
+
 
