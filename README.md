@@ -2,17 +2,13 @@
 
 This project provides a **modular ML pipeline** to assess the germination potential of corn (maize) kernels. It includes image segmentation using U-Net, feature extraction (skeleton, contour, bounding boxes), and classification using various ML algorithms (Random Forest, SHAP explainability, etc).
 
-[https://github.com/your\_username/Maize/assets/your\_video\_id/germination-demo.mp4](https://github.com/your_username/Maize/assets/your_video_id/germination-demo.mp4)
-
-### 📅 Why This Project
+###  Why This Project
 
 * Automated seedling evaluation using computer vision
 * Designed for high-throughput phenotyping tasks in agriculture
 * Flexible structure to support plug-and-play segmentation and classification models
 
-<p align="right">(<a href="#readme-top">back to top</a>)</p>
-
-## 🧰 Project Structure
+##  Project Structure
 
 ```
 Maize/
@@ -48,7 +44,7 @@ Maize/
 └── README.md                    # Этот файл
 ```
 
-## 🚀 Built With
+##  Built With
 
 * [Python](https://www.python.org/)
 * [NumPy](https://numpy.org/)
@@ -60,7 +56,6 @@ Maize/
 * [Albumentations](https://albumentations.ai/)
 * [SHAP](https://github.com/slundberg/shap)
 
-<p align="right">(<a href="#readme-top">back to top</a>)</p>
 
 ## ⚡ Getting Started
 
@@ -86,9 +81,8 @@ python segmentation_project/Inference.py
 python Classification/Inference.py
 ```
 
-<p align="right">(<a href="#readme-top">back to top</a>)</p>
 
-## 🔄 Pipeline Overview
+##  Pipeline Overview
 
 1. **Segmentation**: U-Net model segments seed parts
 2. **Feature Extraction**: Extracts contours, skeletons, bounding boxes, top-left points
@@ -97,9 +91,8 @@ python Classification/Inference.py
 
 ![Pipeline GIF](https://media.giphy.com/media/QBd2kLB5qDmysEXre9/giphy.gif)
 
-<p align="right">(<a href="#readme-top">back to top</a>)</p>
 
-## 🌟 Features
+##  Features
 
 * [x] U-Net based image segmentation
 * [x] Custom feature engineering (skeleton, contours)
@@ -108,15 +101,14 @@ python Classification/Inference.py
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
-## 🌐 Roadmap
+##  Roadmap
 
 * [ ] Add 3D seed visualization with Meshroom/Plotly
 * [ ] Integrate model selection via Optuna
 * [ ] Add real-time prediction UI
 
-<p align="right">(<a href="#readme-top">back to top</a>)</p>
 
-## ✊ Contributing
+##  Contributing
 
 Pull requests are welcome! Please follow these steps:
 
@@ -125,21 +117,18 @@ Pull requests are welcome! Please follow these steps:
 3. Commit your changes
 4. Push to the branch and open a PR
 
-<p align="right">(<a href="#readme-top">back to top</a>)</p>
 
 ## 📄 License
 
 Distributed under the MIT License. See `LICENSE` for more info.
 
-<p align="right">(<a href="#readme-top">back to top</a>)</p>
 
 ## 💬 Contact
 
-Project Author: **Your Name**
+Project Author: **Rassinin Maxim**
 Email: [youremail@example.com](mailto:youremail@example.com)
 Repo: [github.com/your\_username/Maize](https://github.com/your_username/Maize)
 
-<p align="right">(<a href="#readme-top">back to top</a>)</p>
 
 ## 👏 Acknowledgments
 
