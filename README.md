@@ -39,9 +39,8 @@ Maize/
 │   ├── main.py
 │   ├── Streamlit_app.py
 │   └── ...
-│
-├── data_lee.csv                 # Основной CSV с аннотациями
-└── README.md                    # Этот файл
+│              
+└── data_lee.csv     # Основной CSV с аннотациями           
 ```
 
 ##  Built With
@@ -68,6 +67,12 @@ pip install -r requirements.txt
 ```
 
 Make sure `data_lee.csv` and image directories are properly structured under `Dataset/`.
+
+### Run web-interface
+
+```bash
+python Web_Interface/main.py
+```
 
 ### Run segmentation
 
@@ -99,7 +104,6 @@ python Classification/Inference.py
 * [x] Classification using Random Forest and SHAP
 * [x] Configurable inference/visualization modules
 
-<p align="right">(<a href="#readme-top">back to top</a>)</p>
 
 ##  Roadmap
 
@@ -130,7 +134,7 @@ Email: [youremail@example.com](mailto:youremail@example.com)
 Repo: [github.com/your\_username/Maize](https://github.com/your_username/Maize)
 
 
-## 👏 Acknowledgments
+##  Acknowledgments
 
 * [PyImageSearch](https://pyimagesearch.com/)
 * [Papers With Code](https://paperswithcode.com/)
@@ -139,6 +143,5 @@ Repo: [github.com/your\_username/Maize](https://github.com/your_username/Maize)
 
 ---
 
-> Tip: add `.gif` or `.mp4` videos showing model performance during classification or segmentation. Upload them into a `docs/` or `images/` folder and link from there.
 
 
