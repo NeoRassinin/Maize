@@ -12,35 +12,35 @@ This project provides a **modular ML pipeline** to assess the germination potent
 
 ```
 Maize/
-├── Classification/              # Модуль оценки всхожести
-│   ├── ALE_PREDICT_*            # Предсказания на полях Алейска
-│   ├── POS_PREDICT_*            # Предсказания на полях Поспелихи
-│   ├── Dataset/                 # Данные
-│   ├── config.py                # Конфигурации
-│   ├── feature_engineering.py   # PySpark обработка признаков
-│   ├── hough.py                 # Выделение линий роста
-│   ├── inference_utils.py       # Вспомогательные функции инференса
-│   ├── Inference.py             # Скрипт инференса
-│   ├── spark_session.py         # Инициализация Spark
-│   ├── visualization.py         # Визуализации
-│   └── ...                      # Остальные утилиты
+├── Classification/              # Germination assessment module
+│   ├── ALE_PREDICT_*            # Predictions in the Fields of Aleysk
+│   ├── POS_PREDICT_*            # Predictions in the Fields of Pospelikha
+│   ├── Dataset/                 # Data
+│   ├── config.py                # Configurations
+│   ├── feature_engineering.py   # PySpark feature processing
+│   ├── hough.py                 # Highlighting growth lines
+│   ├── inference_utils.py       # Auxiliary functions of the inference
+│   ├── Inference.py             # The Inference script
+│   ├── spark_session.py         # Spark Initialization
+│   ├── visualization.py         # Visualizations
+│   └── ...                      # Other utilities
 │
-├── segmentation_project/        # Модуль сегментации
-│   ├── Config.py
-│   ├── Dataset.py
-│   ├── Inference.py
-│   ├── Model.py
-│   ├── Train.py
-│   ├── Visualization.py
+├── segmentation_project/        # The segmentation module
+│   ├── Config.py                # Configurations
+│   ├── Dataset.py               # Data
+│   ├── Inference.py             # The Inference script
+│   ├── Model.py                 # Neural network architecture
+│   ├── Train.py                 # Training pipeline for training a segmentation model
+│   ├── Visualization.py         # Utilities for visualizing predictions, labels, masks, etc.
 │   └── ...
 │ 
-├── Web-Interface/        # Модуль веб-сервиса
-│   ├── load_models.py
-│   ├── main.py
-│   ├── Streamlit_app.py
+├── Web-Interface/               # A web interface module on Streamlit to demonstrate a model
+│   ├── load_models.py           # Downloading and preparing models for use in the web
+│   ├── main.py                  # The main starting point for local interface testing
+│   ├── Streamlit_app.py         # Streamlit application: UI for uploading images and displaying results
 │   └── ...
 │              
-└── data_lee.csv     # Основной CSV с аннотациями           
+└── data_lee.csv     # Basic CSV with annotations        
 ```
 
 ##  Built With
@@ -105,13 +105,6 @@ python Classification/Inference.py
 * [x] Configurable inference/visualization modules
 
 
-##  Roadmap
-
-* [ ] Add 3D seed visualization with Meshroom/Plotly
-* [ ] Integrate model selection via Optuna
-* [ ] Add real-time prediction UI
-
-
 ##  Contributing
 
 Pull requests are welcome! Please follow these steps:
@@ -130,9 +123,6 @@ Distributed under the MIT License. See `LICENSE` for more info.
 ## 💬 Contact
 
 Project Author: **Rassinin Maxim**
-Email: [youremail@example.com](mailto:youremail@example.com)
-Repo: [github.com/your\_username/Maize](https://github.com/your_username/Maize)
-
 
 ##  Acknowledgments
 
